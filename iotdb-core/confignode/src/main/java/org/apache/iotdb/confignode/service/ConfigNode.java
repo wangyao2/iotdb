@@ -67,7 +67,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class ConfigNode implements ConfigNodeMBean {
-
+  //在datanode中添加一些注释来测试一下git同步到我自己仓库是不是可行的
   private static final Logger LOGGER = LoggerFactory.getLogger(ConfigNode.class);
 
   private static final ConfigNodeConfig CONF = ConfigNodeDescriptor.getInstance().getConf();
