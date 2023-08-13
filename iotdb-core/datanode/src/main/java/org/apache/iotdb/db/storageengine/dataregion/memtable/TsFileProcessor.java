@@ -1113,7 +1113,7 @@ public class TsFileProcessor {
                   writer,
                   storageGroupName,
                   dataRegionInfo.getDataRegion().getDataRegionId());
-          flushTask.syncFlushMemTable();
+          flushTask.syncFlushMemTable();//开启同步刷写
         } catch (Throwable e) {
           if (writer == null) {
             logger.info(

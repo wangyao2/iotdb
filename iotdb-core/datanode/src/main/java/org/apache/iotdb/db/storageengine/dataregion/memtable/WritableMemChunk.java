@@ -338,7 +338,7 @@ public class WritableMemChunk implements IWritableMemChunk {
           chunkWriterImpl.write(time, list.getBoolean(sortedRowIndex));
           break;
         case INT32:
-          chunkWriterImpl.write(time, list.getInt(sortedRowIndex));
+          chunkWriterImpl.write(time, list.getInt(sortedRowIndex));//这个起名也不行，这里的write是写入到
           break;
         case INT64:
           chunkWriterImpl.write(time, list.getLong(sortedRowIndex));
