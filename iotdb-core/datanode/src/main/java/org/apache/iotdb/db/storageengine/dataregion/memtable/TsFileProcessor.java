@@ -951,7 +951,7 @@ public class TsFileProcessor {
       }
       logger.info(
           "Async flush a memtable to tsfile: {}", tsFileResource.getTsFile().getAbsolutePath());
-      addAMemtableIntoFlushingList(workMemTable);
+      addAMemtableIntoFlushingList(workMemTable);//把memtable写入到刷写队列当中，在这个函数里面处理包括置null等事情
     } catch (Exception e) {
       logger.error(
           "{}: {} add a memtable into flushing list failed",
@@ -1094,8 +1094,8 @@ public class TsFileProcessor {
    * the flush manager pool
    */
   @SuppressWarnings({"squid:S3776", "squid:S2142"}) // Suppress high Cognitive Complexity warning
-  public void flushOneMemTable() {
-    IMemTable memTableToFlush = flushingMemTables.getFirst();
+  public void flushOneMemTable() {//这个方法由一个线程负责执行，由主线程来做，主线程不能闲着
+    IMemTable memTableToFlush = flushingMemTables.getFirst();//获得刷写的memtable
 
     // signal memtable only may appear when calling asyncClose()
     if (!memTableToFlush.isSignalMemTable()) {
