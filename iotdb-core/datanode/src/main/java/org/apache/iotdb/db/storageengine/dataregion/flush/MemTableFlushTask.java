@@ -187,6 +187,7 @@ public class MemTableFlushTask {
                 writableMemChunk.encode(seriesWriter);//这一句话是进行编码的,series排序后直接编码
                 seriesWriter.sealCurrentPage();
                 seriesWriter.clearPageWriter();
+                System.out.println("请注意，已经成功完成了memtable的排序后刷写工作！");
                 try {
                     ioTaskQueue.put(seriesWriter);
                 } catch (InterruptedException e) {
@@ -262,98 +263,6 @@ public class MemTableFlushTask {
                 memTable,
                 System.currentTimeMillis() - start);
     }
-
-    /**
-     * encoding task (second task of pipeline)
-     */
-    /* 开始尝试把编码任务和排序任务由同一个线程来做，那最开始的时候，就不需要开启编码任务了吧？*/
-    private Runnable encodingTask =
-            new Runnable() {
-
-                @SuppressWarnings("squid:S135")
-                @Override
-                public void run() {
-                    LOGGER.debug(
-                            "Database {} memtable flushing to file {} starts to encoding data.",
-                            storageGroup,
-                            writer.getFile().getName());
-                    while (true) {
-
-                        Object task;
-                        try {
-                            task = encodingTaskQueue.take();
-                        } catch (InterruptedException e1) {
-                            LOGGER.error("Take task into ioTaskQueue Interrupted");
-                            Thread.currentThread().interrupt();
-                            break;
-                        }
-                        if (task instanceof StartFlushGroupIOTask || task instanceof EndChunkGroupIoTask) {
-                            try {
-                                ioTaskQueue.put(task);
-                            } catch (
-                                    @SuppressWarnings("squid:S2142")
-                                    InterruptedException e) {
-                                LOGGER.error(
-                                        "Database {} memtable flushing to file {}, encoding task is interrupted.",
-                                        storageGroup,
-                                        writer.getFile().getName(),
-                                        e);
-                                // generally it is because the thread pool is shutdown so the task should be aborted
-                                break;
-                            }
-                        } else if (task instanceof TaskEnd) {
-                            break;
-                        } else {
-                            long starTime = System.currentTimeMillis();
-                            IWritableMemChunk writableMemChunk = (IWritableMemChunk) task;
-                            IChunkWriter seriesWriter = writableMemChunk.createIChunkWriter();
-                            writableMemChunk.encode(seriesWriter);//这一句话是进行编码的
-                            seriesWriter.sealCurrentPage();
-                            seriesWriter.clearPageWriter();
-                            try {
-                                ioTaskQueue.put(seriesWriter);
-                            } catch (InterruptedException e) {
-                                LOGGER.error("Put task into ioTaskQueue Interrupted");
-                                Thread.currentThread().interrupt();
-                            }
-                            long subTaskTime = System.currentTimeMillis() - starTime;
-                            WRITING_METRICS.recordFlushSubTaskCost(WritingMetrics.ENCODING_TASK, subTaskTime);
-                            memSerializeTime += subTaskTime;
-                        }
-                    }
-                    try {
-                        ioTaskQueue.put(new TaskEnd());
-                    } catch (InterruptedException e) {
-                        LOGGER.error("Put task into ioTaskQueue Interrupted");
-                        Thread.currentThread().interrupt();
-                    }
-
-                    if (!storageGroup.startsWith(IoTDBConfig.SYSTEM_DATABASE)) {
-                        int lastIndex = storageGroup.lastIndexOf("-");
-                        if (lastIndex == -1) {
-                            lastIndex = storageGroup.length();
-                        }
-                        MetricService.getInstance()
-                                .gaugeWithInternalReportAsync(
-                                        memTable.getTotalPointsNum(),
-                                        Metric.POINTS.toString(),
-                                        MetricLevel.CORE,
-                                        Tag.DATABASE.toString(),
-                                        storageGroup.substring(0, lastIndex),
-                                        Tag.TYPE.toString(),
-                                        "flush",
-                                        Tag.REGION.toString(),
-                                        dataRegionId);
-                    }
-
-                    LOGGER.info(
-                            "Database {}, flushing memtable {} into disk: Encoding data cost " + "{} ms.",
-                            storageGroup,
-                            writer.getFile().getName(),
-                            memSerializeTime);
-                    WRITING_METRICS.recordFlushCost(WritingMetrics.FLUSH_STAGE_ENCODING, memSerializeTime);
-                }
-            };
 
     /**
      * io task (third task of pipeline)
