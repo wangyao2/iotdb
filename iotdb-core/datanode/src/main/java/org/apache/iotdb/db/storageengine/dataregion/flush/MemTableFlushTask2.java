@@ -33,6 +33,7 @@ import org.apache.iotdb.db.storageengine.rescon.memory.SystemInfo;
 import org.apache.iotdb.metrics.utils.MetricLevel;
 import org.apache.iotdb.tsfile.write.chunk.IChunkWriter;
 import org.apache.iotdb.tsfile.write.writer.RestorableTsFileIOWriter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +58,7 @@ public class MemTableFlushTask2 {
       FlushSubTaskPoolManager.getInstance();
   private static final WritingMetrics WRITING_METRICS = WritingMetrics.getInstance();
   private static IoTDBConfig config = IoTDBDescriptor.getInstance().getConfig();
-  private final Future<?> encodingTaskFuture;//这几个地方都是私有的，看来修改不用逃出这个类
+  private final Future<?> encodingTaskFuture; // 这几个地方都是私有的，看来修改不用逃出这个类
   private final Future<?> ioTaskFuture;
   private RestorableTsFileIOWriter writer;
 
@@ -89,8 +90,8 @@ public class MemTableFlushTask2 {
     this.writer = writer;
     this.storageGroup = storageGroup;
     this.dataRegionId = dataRegionId;
-    this.encodingTaskFuture = SUB_TASK_POOL_MANAGER.submit(encodingTask);//卧槽，在构造方法的时候，就先把两个任务启动了
-    //修改的时候，应该就不再需要启动这个编码任务了
+    this.encodingTaskFuture = SUB_TASK_POOL_MANAGER.submit(encodingTask); // 卧槽，在构造方法的时候，就先把两个任务启动了
+    // 修改的时候，应该就不再需要启动这个编码任务了
     this.ioTaskFuture = SUB_TASK_POOL_MANAGER.submit(ioTask);
     LOGGER.debug(
         "flush task of database {} memtable is created, flushing to file {}.",
@@ -135,31 +136,33 @@ public class MemTableFlushTask2 {
     Map<IDeviceID, IWritableMemChunkGroup> memTableMap = memTable.getMemTableMap();
     List<IDeviceID> deviceIDList = new ArrayList<>(memTableMap.keySet());
     // sort the IDeviceID in lexicographical order
-    deviceIDList.sort(Comparator.comparing(IDeviceID::toStringID));//按照字典序给他排序
+    deviceIDList.sort(Comparator.comparing(IDeviceID::toStringID)); // 按照字典序给他排序
     for (IDeviceID deviceID : deviceIDList) {
-      final Map<String, IWritableMemChunk> value = memTableMap.get(deviceID).getMemChunkMap();//拿到每一个设备中的所有序列
+      final Map<String, IWritableMemChunk> value =
+          memTableMap.get(deviceID).getMemChunkMap(); // 拿到每一个设备中的所有序列
       // skip the empty device/chunk group
       if (memTableMap.get(deviceID).count() == 0 || value.isEmpty()) {
         continue;
       }
       encodingTaskQueue.put(new StartFlushGroupIOTask(deviceID.toStringID()));
-      List<String> seriesInOrder = new ArrayList<>(value.keySet());//拿到一个设备中的所有序列名
-      seriesInOrder.sort((String::compareTo));//给序列名字排序
+      List<String> seriesInOrder = new ArrayList<>(value.keySet()); // 拿到一个设备中的所有序列名
+      seriesInOrder.sort((String::compareTo)); // 给序列名字排序
       for (String seriesId : seriesInOrder) {
         long startTime = System.currentTimeMillis();
-        IWritableMemChunk series = value.get(seriesId);//获得一个Device中一个measurement的对应的memchunk
+        IWritableMemChunk series = value.get(seriesId); // 获得一个Device中一个measurement的对应的memchunk
         if (series.count() == 0) {
           continue;
         }
         /*
          * sort task (first task of flush pipeline)
          */
-        series.sortTvListForFlush();//这个命名做的很差，series对应的是一个序列memchunk，这个方法进去之后就是WritableMemChunk里面负责排序的方法了
-        //现在我要做的就是把编码也放在这个地方，好好构思怎么处理这一块内容
+        series
+            .sortTvListForFlush(); // 这个命名做的很差，series对应的是一个序列memchunk，这个方法进去之后就是WritableMemChunk里面负责排序的方法了
+        // 现在我要做的就是把编码也放在这个地方，好好构思怎么处理这一块内容
         long subTaskTime = System.currentTimeMillis() - startTime;
         sortTime += subTaskTime;
         WRITING_METRICS.recordFlushSubTaskCost(WritingMetrics.SORT_TASK, subTaskTime);
-        encodingTaskQueue.put(series);//排序好了之后，放入到编码队列当中，等待编码线程的处理吗
+        encodingTaskQueue.put(series); // 排序好了之后，放入到编码队列当中，等待编码线程的处理吗
       }
 
       encodingTaskQueue.put(new EndChunkGroupIoTask());
@@ -259,7 +262,7 @@ public class MemTableFlushTask2 {
               long starTime = System.currentTimeMillis();
               IWritableMemChunk writableMemChunk = (IWritableMemChunk) task;
               IChunkWriter seriesWriter = writableMemChunk.createIChunkWriter();
-              writableMemChunk.encode(seriesWriter);//这一句话是进行编码的
+              writableMemChunk.encode(seriesWriter); // 这一句话是进行编码的
               seriesWriter.sealCurrentPage();
               seriesWriter.clearPageWriter();
               try {
@@ -326,7 +329,7 @@ public class MemTableFlushTask2 {
           }
           long starTime = System.currentTimeMillis();
           try {
-            if (ioMessage instanceof StartFlushGroupIOTask) {//判断一下获取的数据类型是什么
+            if (ioMessage instanceof StartFlushGroupIOTask) { // 判断一下获取的数据类型是什么
               this.writer.startChunkGroup(((StartFlushGroupIOTask) ioMessage).deviceId);
             } else if (ioMessage instanceof TaskEnd) {
               break;
@@ -335,7 +338,7 @@ public class MemTableFlushTask2 {
               this.writer.setMaxPlanIndex(memTable.getMaxPlanIndex());
               this.writer.endChunkGroup();
             } else {
-              ((IChunkWriter) ioMessage).writeToFileWriter(this.writer);//就这一行是用来写入的TSfile文件的
+              ((IChunkWriter) ioMessage).writeToFileWriter(this.writer); // 就这一行是用来写入的TSfile文件的
             }
           } catch (IOException e) {
             LOGGER.error(

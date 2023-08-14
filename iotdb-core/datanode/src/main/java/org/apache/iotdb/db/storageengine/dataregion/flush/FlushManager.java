@@ -97,7 +97,7 @@ public class FlushManager implements FlushManagerMBean, IService {
   class FlushThread extends WrappedRunnable {
 
     @Override
-    public void runMayThrow() {//这个方法就被run方法调用执行，作为一个刷写任务被执行，由主线程来负责执行
+    public void runMayThrow() { // 这个方法就被run方法调用执行，作为一个刷写任务被执行，由主线程来负责执行
       TsFileProcessor tsFileProcessor = tsFileProcessorQueue.poll();
       if (null == tsFileProcessor) {
         return;
@@ -138,7 +138,7 @@ public class FlushManager implements FlushManagerMBean, IService {
                 tsFileProcessorQueue.size());
           }
           tsFileProcessor.setManagedByFlushManager(true);
-          flushPool.submit(new FlushThread());//在这里开启一个刷写任务，Thread里面直接调用刷写方法
+          flushPool.submit(new FlushThread()); // 在这里开启一个刷写任务，Thread里面直接调用刷写方法
         } else {
           if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(

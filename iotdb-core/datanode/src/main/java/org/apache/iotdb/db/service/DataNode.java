@@ -101,7 +101,7 @@ import java.util.stream.Collectors;
 import static org.apache.iotdb.commons.conf.IoTDBConstant.DEFAULT_CLUSTER_NAME;
 
 public class DataNode implements DataNodeMBean {
-  //在datanode中添加一些注释来测试一下git同步到我自己仓库是不是可行的
+  // 在datanode中添加一些注释来测试一下git同步到我自己仓库是不是可行的mvn
   private static final Logger logger = LoggerFactory.getLogger(DataNode.class);
   private static final IoTDBConfig config = IoTDBDescriptor.getInstance().getConfig();
 
