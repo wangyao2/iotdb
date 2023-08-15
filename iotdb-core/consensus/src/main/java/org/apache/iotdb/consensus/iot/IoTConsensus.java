@@ -153,7 +153,7 @@ public class IoTConsensus implements IConsensus {
 
   @Override
   public ConsensusWriteResponse write(ConsensusGroupId groupId, IConsensusRequest request) {
-    IoTConsensusServerImpl impl = stateMachineMap.get(groupId);
+      IoTConsensusServerImpl impl = stateMachineMap.get(groupId);
     if (impl == null) {
       return ConsensusWriteResponse.newBuilder()
           .setException(new ConsensusGroupNotExistException(groupId))

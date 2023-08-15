@@ -104,7 +104,7 @@ public abstract class PlanNode implements IConsensusRequest {
 
   public <R, C> R accept(PlanVisitor<R, C> visitor, C context) {
     return visitor.visitPlan(this, context);
-  }
+  }//在这里要根据PlanNode的类型来选择 继承类 了，但是PlanNode的生成是在哪个阶段呢？
 
   public void serialize(ByteBuffer byteBuffer) {
     serializeAttributes(byteBuffer);

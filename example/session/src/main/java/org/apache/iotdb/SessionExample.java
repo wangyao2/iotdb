@@ -88,8 +88,8 @@ public class SessionExample {
     //     createTemplate();
     // createTimeseries();
     //    createMultiTimeseries();
-    insertRecord();
-    //    insertTablet();
+    //insertRecord();
+    insertTablet();
     //    insertTabletWithNullValues();
     //    insertTablets();
     //    insertRecords();
@@ -267,7 +267,7 @@ public class SessionExample {
     types.add(TSDataType.INT64);
 
     long time = System.currentTimeMillis();
-    for (int i = 0; i < 1000; time++, i++) {
+    for (int i = 0; i < 3; time++, i++) {
       List<Object> values = new ArrayList<>();
       values.add(10L);
       values.add(25L);
@@ -419,28 +419,28 @@ public class SessionExample {
       session.insertTablet(tablet);
       tablet.reset();
     }
-
-    // Method 2 to add tablet data
-    long[] timestamps = tablet.timestamps;
-    Object[] values = tablet.values;
-
-    for (long time = 0; time < 100; time++) {
-      int row = tablet.rowSize++;
-      timestamps[row] = time;
-      for (int i = 0; i < 3; i++) {
-        long[] sensor = (long[]) values[i];
-        sensor[row] = i;
-      }
-      if (tablet.rowSize == tablet.getMaxRowNumber()) {
-        session.insertTablet(tablet, true);
-        tablet.reset();
-      }
-    }
-
-    if (tablet.rowSize != 0) {
-      session.insertTablet(tablet);
-      tablet.reset();
-    }
+//
+//    // Method 2 to add tablet data
+//    long[] timestamps = tablet.timestamps;
+//    Object[] values = tablet.values;
+//
+//    for (long time = 0; time < 100; time++) {
+//      int row = tablet.rowSize++;
+//      timestamps[row] = time;
+//      for (int i = 0; i < 3; i++) {
+//        long[] sensor = (long[]) values[i];
+//        sensor[row] = i;
+//      }
+//      if (tablet.rowSize == tablet.getMaxRowNumber()) {
+//        session.insertTablet(tablet, true);
+//        tablet.reset();
+//      }
+//    }
+//
+//    if (tablet.rowSize != 0) {
+//      session.insertTablet(tablet);
+//      tablet.reset();
+//    }
   }
 
   private static void insertTabletWithNullValues()
