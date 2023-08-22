@@ -1834,7 +1834,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // check whether measurement is legal according to syntax convention
       req.setMeasurements(PathUtils.checkIsLegalSingleMeasurementsAndUpdate(req.getMeasurements()));
 
-      InsertRowStatement statement = StatementGenerator.createStatement(req);
+      InsertRowStatement statement = StatementGenerator.createStatement(req);//这个传入的Req是从thrift传过来的
       // return success when this statement is empty because server doesn't need to execute it
       if (statement.isEmpty()) {
         return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);

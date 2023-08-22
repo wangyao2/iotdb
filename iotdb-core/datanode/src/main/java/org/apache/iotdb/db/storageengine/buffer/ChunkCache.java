@@ -45,7 +45,7 @@ import static org.apache.iotdb.db.queryengine.metric.SeriesScanCostMetricSet.REA
 
 /**
  * This class is used to cache <code>Chunk</code> of <code>ChunkMetaData</code> in IoTDB. The
- * caching strategy is LRU.
+ * caching strategy is LRU.单例模式的，负责管理维护chunk
  */
 @SuppressWarnings("squid:S6548")
 public class ChunkCache {
